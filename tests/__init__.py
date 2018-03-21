@@ -24,10 +24,8 @@ license: LGPL v.3
 from functools import partial
 from unittest import TestCase
 
-from values import values
 
-
-class ValuesTest(TestCase):
+class ValuesTestBase():
 
 
     def test_equality(self):
@@ -38,9 +36,9 @@ class ValuesTest(TestCase):
         """
 
         # permutations of values with only args
-        a = values(1, 2, 3)
-        b = values(1, 2, 3)
-        c = values(4, 5, 6)
+        a = self.values(1, 2, 3)
+        b = self.values(1, 2, 3)
+        c = self.values(4, 5, 6)
 
         self.assertEqual(a, a)
         self.assertEqual(a, b)
@@ -49,9 +47,9 @@ class ValuesTest(TestCase):
         self.assertNotEqual(b, c)
 
         # permutations of values with only kwds
-        d = values(foo=9, bar=10)
-        e = values(foo=9, bar=10)
-        f = values(foo=100, quuz=200)
+        d = self.values(foo=9, bar=10)
+        e = self.values(foo=9, bar=10)
+        f = self.values(foo=100, quuz=200)
 
         self.assertEqual(d, d)
         self.assertEqual(d, e)
@@ -63,11 +61,11 @@ class ValuesTest(TestCase):
         self.assertNotEqual(d, a)
 
         # permutations of values with both args and kwds
-        g = values(1, 2, 3, foo=9, bar=10)
-        h = values(1, 2, 3, foo=9, bar=10)
-        i = values(1, 2, 3, foo=100, quuz=200)
-        j = values(4, 5, 6, foo=9, bar=10)
-        k = values(4, 5, 6, foo=100, quuz=200)
+        g = self.values(1, 2, 3, foo=9, bar=10)
+        h = self.values(1, 2, 3, foo=9, bar=10)
+        i = self.values(1, 2, 3, foo=100, quuz=200)
+        j = self.values(4, 5, 6, foo=9, bar=10)
+        k = self.values(4, 5, 6, foo=100, quuz=200)
 
         self.assertEqual(g, g)  # identity
         self.assertEqual(g, h)  # similar
@@ -85,7 +83,7 @@ class ValuesTest(TestCase):
 
         # the empty values, test it against the non-empty ones to make
         # sure nothing breaks
-        z = values()
+        z = self.values()
 
         self.assertNotEqual(a, z)
         self.assertNotEqual(z, a)
@@ -101,8 +99,8 @@ class ValuesTest(TestCase):
         operations against other sequences
         """
 
-        a = values(1, 2, 3)
-        b = values(4, 5, 6)
+        a = self.values(1, 2, 3)
+        b = self.values(4, 5, 6)
 
         self.assertEqual(sum(a), 6)
         self.assertEqual(sum(b), 15)
@@ -121,7 +119,7 @@ class ValuesTest(TestCase):
         self.assertNotEqual(b, (1, 2, 3))
         self.assertNotEqual((1, 2, 3), b)
 
-        c = values(1, 2, 3, foo=5)
+        c = self.values(1, 2, 3, foo=5)
 
         self.assertEqual(list(c), [1, 2, 3])
 
@@ -135,8 +133,8 @@ class ValuesTest(TestCase):
         operations against other mappings
         """
 
-        a = values(a=1, b=2, c=3)
-        b = values(a=4, b=5, c=6)
+        a = self.values(a=1, b=2, c=3)
+        b = self.values(a=4, b=5, c=6)
 
         self.assertEqual(dict(a), {'a': 1, 'b': 2, 'c': 3})
         self.assertEqual(dict(b), {'a': 4, 'b': 5, 'c': 6})
@@ -154,7 +152,7 @@ class ValuesTest(TestCase):
         self.assertNotEqual(b, {'a': 1, 'b': 2, 'c': 3})
         self.assertNotEqual({'a': 1, 'b': 2, 'c': 3}, b)
 
-        c = values(1, 2, 3, a=4, b=5, c=6)
+        c = self.values(1, 2, 3, a=4, b=5, c=6)
 
         # whether it has positionals or not, only the keywords get
         # converted over this way
@@ -166,7 +164,7 @@ class ValuesTest(TestCase):
 
         # test for equality with empty mappings (which means the
         # underlying dict ref is probably NULL
-        v = values()
+        v = self.values()
         self.assertEqual(v, dict())
         self.assertEqual(dict(), v)
         self.assertNotEqual(v, dict(foo=1))
@@ -179,7 +177,7 @@ class ValuesTest(TestCase):
         and keyword members
         """
 
-        a = values(1, 2, 3, a=4, b=5)
+        a = self.values(1, 2, 3, a=4, b=5)
 
         self.assertEqual(a[0], 1)
         self.assertEqual(a[1], 2)
@@ -191,7 +189,7 @@ class ValuesTest(TestCase):
         self.assertRaises(IndexError, lambda: a[3])
         self.assertRaises(KeyError, lambda: a['c'])
 
-        b = values(1, 2, 3)
+        b = self.values(1, 2, 3)
         self.assertRaises(KeyError, lambda: b['a'])
 
 
@@ -213,38 +211,38 @@ class ValuesTest(TestCase):
         def gather(a, b, c, d=0):
             return [a, b, c, d]
 
-        v = values(1, 2, 3)
+        v = self.values(1, 2, 3)
         self.assertEqual(v(gather), [1, 2, 3, 0])
 
-        v = values(1, 2, 3, 4)
+        v = self.values(1, 2, 3, 4)
         self.assertEqual(v(gather), [1, 2, 3, 4])
 
-        v = values(1, 2, 3, d=9)
+        v = self.values(1, 2, 3, d=9)
         self.assertEqual(v(gather), [1, 2, 3, 9])
 
-        v = values(c=8, b=7, a=6)
+        v = self.values(c=8, b=7, a=6)
         self.assertEqual(v(gather), [6, 7, 8, 0])
 
-        v = values(d=9, c=8, b=7, a=6)
+        v = self.values(d=9, c=8, b=7, a=6)
         self.assertEqual(v(gather), [6, 7, 8, 9])
 
-        v = values()
+        v = self.values()
         self.assertRaises(TypeError, v)
         self.assertRaises(TypeError, v, gather)
 
-        v = values(d=5)
+        v = self.values(d=5)
         self.assertRaises(TypeError, v, gather)
 
-        v = values(1, 2)
+        v = self.values(1, 2)
         self.assertRaises(TypeError, v, gather)
 
-        v = values(1, 2, d=5)
+        v = self.values(1, 2, d=5)
         self.assertRaises(TypeError, v, gather)
 
-        v = values(1, 2, 3, 4, 5)
+        v = self.values(1, 2, 3, 4, 5)
         self.assertRaises(TypeError, v, gather)
 
-        v = values(1, 2, 3, foo=100)
+        v = self.values(1, 2, 3, foo=100)
         self.assertRaises(TypeError, v, gather)
 
 
@@ -253,33 +251,33 @@ class ValuesTest(TestCase):
         def gather(a, b, c, d=0):
             return [a, b, c, d]
 
-        v = values(1, 2, 3)
+        v = self.values(1, 2, 3)
         self.assertRaises(TypeError, v)
         self.assertEqual(v(gather, d=9), [1, 2, 3, 9])
 
-        v = values(1, 2, 3, d=4)
+        v = self.values(1, 2, 3, d=4)
         self.assertEqual(v(gather, d=9), [1, 2, 3, 9])
         self.assertRaises(TypeError, v, gather, 9)
         self.assertRaises(TypeError, v, gather, x=9)
 
-        v = values()
+        v = self.values()
         self.assertEqual(v(gather, 1, 2, 3), [1, 2, 3, 0])
         self.assertEqual(v(gather, 1, 2, 3, d=9), [1, 2, 3, 9])
 
-        v = values(1)
+        v = self.values(1)
         self.assertEqual(v(gather, 2, 3), [1, 2, 3, 0])
         self.assertEqual(v(gather, 2, 3, d=9), [1, 2, 3, 9])
 
 
     def test_copy(self):
 
-        a = values(1, 2, 3)
-        b = values(foo=4, bar=5)
-        c = values(1, 2, 3, foo=4, bar=5)
+        a = self.values(1, 2, 3)
+        b = self.values(foo=4, bar=5)
+        c = self.values(1, 2, 3, foo=4, bar=5)
 
-        d = a(values)
-        e = b(values)
-        f = c(values)
+        d = a(self.values)
+        e = b(self.values)
+        f = c(self.values)
 
         self.assertEqual(a, d)
         self.assertEqual(b, e)
@@ -291,16 +289,16 @@ class ValuesTest(TestCase):
         tests that the repr of a values is as expected.
         """
 
-        a = values()
+        a = self.values()
         self.assertEqual(repr(a), "values()")
 
-        a = values(1, 2, 3)
+        a = self.values(1, 2, 3)
         self.assertEqual(repr(a), "values(1, 2, 3)")
 
-        a = values(foo=4)
+        a = self.values(foo=4)
         self.assertEqual(repr(a), "values(foo=4)")
 
-        a = values(1, 2, 3, foo=4)
+        a = self.values(1, 2, 3, foo=4)
         self.assertEqual(repr(a), "values(1, 2, 3, foo=4)")
 
 
@@ -310,19 +308,19 @@ class ValuesTest(TestCase):
         """
 
         # empty values is the only False values
-        v = values()
+        v = self.values()
         self.assertFalse(v)
         self.assertTrue(not v)
 
-        v = values(1, 2, 3)
+        v = self.values(1, 2, 3)
         self.assertTrue(v)
         self.assertFalse(not v)
 
-        v = values(foo=4, bar=5)
+        v = self.values(foo=4, bar=5)
         self.assertTrue(v)
         self.assertFalse(not v)
 
-        v = values(1, 2, 3, foo=4, bar=5)
+        v = self.values(1, 2, 3, foo=4, bar=5)
         self.assertTrue(v)
         self.assertFalse(not v)
 
@@ -332,41 +330,41 @@ class ValuesTest(TestCase):
         Test that the hashing works for values
         """
 
-        a = values()
-        b = values()
+        a = self.values()
+        b = self.values()
         self.assertEqual(hash(a), hash(a))
         self.assertEqual(hash(a), hash(b))
         self.assertEqual(hash(a), hash(tuple(a)))
 
-        c = values(1, 2, 3)
-        d = values(1, 2, 3)
-        e = values(4, 5, 6)
+        c = self.values(1, 2, 3)
+        d = self.values(1, 2, 3)
+        e = self.values(4, 5, 6)
 
         self.assertEqual(hash(c), hash(c))
         self.assertEqual(hash(c), hash(d))
         self.assertNotEqual(hash(c), hash(e))
-        self.assertNotEqual(hash(c), hash(a))  # vs. values()
+        self.assertNotEqual(hash(c), hash(a))  # vs. self.values()
         self.assertEqual(hash(c), hash(tuple(c)))
 
-        f = values(foo=11, bar=12)
-        g1 = values(foo=11, bar=12)
-        g2 = values(bar=12, foo=11)
-        h = values(foo=21, bar=22, baz=99)
+        f = self.values(foo=11, bar=12)
+        g1 = self.values(foo=11, bar=12)
+        g2 = self.values(bar=12, foo=11)
+        h = self.values(foo=21, bar=22, baz=99)
 
         self.assertEqual(hash(f), hash(f))
         self.assertEqual(hash(f), hash(g1))
         self.assertEqual(hash(f), hash(g2))
         self.assertNotEqual(hash(f), hash(h))
-        self.assertNotEqual(hash(f), hash(c))  # vs. values(1, 2, 3)
-        self.assertNotEqual(hash(f), hash(a))  # vs. values()
+        self.assertNotEqual(hash(f), hash(c))  # vs. self.values(1, 2, 3)
+        self.assertNotEqual(hash(f), hash(a))  # vs. self.values()
         self.assertNotEqual(hash(f), hash(tuple(f)))
 
-        i = values(1, 2, 3, foo=4, bar=5)
-        j1 = values(1, 2, 3, foo=4, bar=5)
-        j2 = values(1, 2, 3, bar=5, foo=4)
-        k = values(4, 5, 6, foo=4, bar=5)
-        l = values(1, 2, 3, foo=9, bar=10)
-        m = values(4, 5, 6, foo=9, bar=10)
+        i = self.values(1, 2, 3, foo=4, bar=5)
+        j1 = self.values(1, 2, 3, foo=4, bar=5)
+        j2 = self.values(1, 2, 3, bar=5, foo=4)
+        k = self.values(4, 5, 6, foo=4, bar=5)
+        l = self.values(1, 2, 3, foo=9, bar=10)
+        m = self.values(4, 5, 6, foo=9, bar=10)
 
         self.assertEqual(hash(i), hash(i))
         self.assertEqual(hash(i), hash(j1))
@@ -376,30 +374,30 @@ class ValuesTest(TestCase):
         self.assertNotEqual(hash(i), hash(m))  # diff args, diff kwds
         self.assertNotEqual(hash(i), hash(tuple(i)))
 
-        bad_1 = values({"a": 1})
+        bad_1 = self.values({"a": 1})
         self.assertRaises(TypeError, hash, bad_1)
 
-        bad_2 = values(b={"b": 1})
+        bad_2 = self.values(b={"b": 1})
         self.assertRaises(TypeError, hash, bad_2)
 
-        bad_3 = values({"a": 1}, b={"b": 1})
+        bad_3 = self.values({"a": 1}, b={"b": 1})
         self.assertRaises(TypeError, hash, bad_3)
 
         data = {
-            values(): "wut",
-            values(1, 2, 3): "tacos",
-            values(foo=9): "foo niner",
-            values(2, 2, hands='blue'): "serenity",
+            self.values(): "wut",
+            self.values(1, 2, 3): "tacos",
+            self.values(foo=9): "foo niner",
+            self.values(2, 2, hands='blue'): "serenity",
         }
         setter = data.__setitem__
         getter = data.__getitem__
 
-        self.assertEqual(data[values()], "wut")
+        self.assertEqual(data[self.values()], "wut")
         self.assertEqual(data[()], "wut")
-        self.assertEqual(data[values(1, 2, 3)], "tacos")
+        self.assertEqual(data[self.values(1, 2, 3)], "tacos")
         self.assertEqual(data[(1, 2, 3)], "tacos")
-        self.assertEqual(data[values(foo=9)], "foo niner")
-        self.assertEqual(data[values(2, 2, hands='blue')], "serenity")
+        self.assertEqual(data[self.values(foo=9)], "foo niner")
+        self.assertEqual(data[self.values(2, 2, hands='blue')], "serenity")
 
         self.assertRaises(TypeError, setter, bad_1, None)
         self.assertRaises(TypeError, setter, bad_2, None)
@@ -409,11 +407,27 @@ class ValuesTest(TestCase):
         self.assertRaises(TypeError, getter, bad_3)
 
         self.assertRaises(KeyError, getter, (1, 2, 3, 4))
-        self.assertRaises(KeyError, getter, values(1, 2, 3, foo=9))
-        self.assertRaises(KeyError, getter, values(2, 2, hands='tiny'))
-        self.assertRaises(KeyError, getter, values(hands='blue'))
-        self.assertRaises(KeyError, getter, values(1, 2, 3, 4))
-        self.assertRaises(KeyError, getter, values(bar=None))
+        self.assertRaises(KeyError, getter, self.values(1, 2, 3, foo=9))
+        self.assertRaises(KeyError, getter, self.values(2, 2, hands='tiny'))
+        self.assertRaises(KeyError, getter, self.values(hands='blue'))
+        self.assertRaises(KeyError, getter, self.values(1, 2, 3, 4))
+        self.assertRaises(KeyError, getter, self.values(bar=None))
+
+
+try:
+    class PyValuesTest(TestCase, ValuesTestBase):
+        from values import pyvalues as values
+
+except ImportError:
+    pass
+
+
+try:
+    class CValuesTest(TestCase, ValuesTestBase):
+        from values import cvalues as values
+
+except ImportError:
+    pass
 
 
 #

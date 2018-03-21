@@ -41,7 +41,7 @@ class pyvalues(object):
 
         members = []
         members.extend(map(repr, self.__args))
-        members.extend(map("%r=%r".__mod__, self.__kwds.items()))
+        members.extend(map("%s=%r".__mod__, self.__kwds.items()))
         members = ", ".join(members)
 
         return "values(" + members + ")"
