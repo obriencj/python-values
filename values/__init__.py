@@ -60,7 +60,7 @@ class pyvalues(object):
         if self is other:
             return True
 
-        elif isinstance(other, values):
+        elif isinstance(other, type(self)):
             return ((self.__args == other.__args) and
                     (self.__kwds == other.__kwds))
 
@@ -81,7 +81,7 @@ class pyvalues(object):
 
 
     def __bool__(self):
-        return bool(self.__args and self.__kwds)
+        return bool(self.__args or self.__kwds)
 
 
     def __iter__(self):
@@ -103,12 +103,16 @@ class pyvalues(object):
         if args:
             if self.__args:
                 args = self.__args + args
+        else:
+            args = self.__args
 
         if kwds:
             if self.__kwds:
                 tmp = dict(self.__kwds)
                 tmp.update(kwds)
                 kwds = tmp
+        else:
+            kwds = self.__kwds
 
         return function(*args, **kwds)
 
