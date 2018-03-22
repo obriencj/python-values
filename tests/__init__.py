@@ -343,7 +343,7 @@ class ValuesTestBase():
         self.assertEqual(hash(c), hash(c))
         self.assertEqual(hash(c), hash(d))
         self.assertNotEqual(hash(c), hash(e))
-        self.assertNotEqual(hash(c), hash(a))  # vs. self.values()
+        self.assertNotEqual(hash(c), hash(a))  # vs. values()
         self.assertEqual(hash(c), hash(tuple(c)))
 
         f = self.values(foo=11, bar=12)
@@ -355,8 +355,8 @@ class ValuesTestBase():
         self.assertEqual(hash(f), hash(g1))
         self.assertEqual(hash(f), hash(g2))
         self.assertNotEqual(hash(f), hash(h))
-        self.assertNotEqual(hash(f), hash(c))  # vs. self.values(1, 2, 3)
-        self.assertNotEqual(hash(f), hash(a))  # vs. self.values()
+        self.assertNotEqual(hash(f), hash(c))  # vs. values(1, 2, 3)
+        self.assertNotEqual(hash(f), hash(a))  # vs. values()
         self.assertNotEqual(hash(f), hash(tuple(f)))
 
         i = self.values(1, 2, 3, foo=4, bar=5)
