@@ -46,6 +46,17 @@
 #endif
 
 
+#if 1
+#define DEBUGMSG(msg, obj) {                                    \
+    printf("** " msg " ");                                      \
+    (obj) && PyObject_Print(((PyObject *) (obj)), stdout, 0);   \
+    printf("\n");                                               \
+  }
+#else
+#define DEBUGMSG(msg, obj) {}
+#endif
+
+
 /* === util === */
 
 static PyObject *_str_close_paren = NULL;
@@ -393,6 +404,94 @@ static int values_bool(PyObject *self) {
 }
 
 
+static PyObject *values_add(PyObject *left, PyObject *right) {
+  PyValues *result = NULL;
+  PyObject *args = NULL, *kwds = NULL, *tmp;
+
+  if (PyValues_CheckExact(left)) {
+    PyValues *s = (PyValues *) left;
+
+    if (PyValues_CheckExact(right)) {
+      PyValues *o = (PyValues *) right;
+
+      args = PySequence_Concat(s->args, o->args);
+      if (! args)
+	return NULL;
+
+      if (o->kwds) {
+	kwds = s->kwds? PyDict_Copy(s->kwds): PyDict_New();
+	PyDict_Update(kwds, o->kwds);
+      } else {
+	kwds = s->kwds;
+	Py_XINCREF(kwds);
+      }
+
+    } else if (PyDict_Check(right)) {
+      args = s->args;
+      Py_INCREF(args);
+
+      kwds = s->kwds? PyDict_Copy(s->kwds): PyDict_New();
+      PyDict_Update(kwds, right);
+
+    } else {
+      tmp = PySequence_Tuple(right);
+      if (! tmp)
+	return NULL;
+
+      args = PySequence_Concat(s->args, tmp);
+      Py_DECREF(tmp);
+
+      if (! args)
+	return NULL;
+
+      kwds = s->kwds;
+      Py_XINCREF(kwds);
+    }
+
+  } else if (PyValues_CheckExact(right)) {
+    PyValues *s = (PyValues *) right;
+
+    if(PyDict_Check(left)) {
+      args = s->args;
+      Py_INCREF(args);
+
+      if (s->kwds) {
+	kwds = PyDict_Copy(left);
+	PyDict_Update(kwds, s->kwds);
+
+      } else {
+	kwds = PyDict_Copy(left);
+      }
+
+    } else {
+      tmp = PySequence_Tuple(left);
+      if (! tmp)
+	return NULL;
+
+      args = PySequence_Concat(tmp, s->args);
+      Py_DECREF(tmp);
+
+      if (! args)
+	return NULL;
+
+      kwds = s->kwds;
+      Py_XINCREF(kwds);
+    }
+
+  } else {
+    PyErr_SetString(PyExc_TypeError, "values_add invoked with no values");
+    return NULL;
+  }
+
+  result = (PyValues *) sib_values(args, NULL);
+  if (result)
+    result->kwds = kwds;  // just to avoid another copy
+  Py_DECREF(args);
+
+  return (PyObject *) result;
+}
+
+
 static PyObject *values_keys(PyObject *self, PyObject *_noargs) {
   PyValues *s = (PyValues *) self;
   PyObject *result = NULL, *tmp;
@@ -423,6 +522,7 @@ static PyMethodDef values_methods[] = {
 
 static PyNumberMethods values_as_number = {
   .nb_bool = (inquiry) values_bool,
+  .nb_add = values_add,
 };
 
 
@@ -478,9 +578,8 @@ PyObject *sib_values(PyObject *args, PyObject *kwds) {
 
   Py_INCREF(args);
   self->args = args;
-
   self->kwds = kwds? PyDict_Copy(kwds): NULL;
-
+  self->weakrefs = NULL;
   self->hashed = 0;
 
   PyObject_GC_Track((PyObject *) self);

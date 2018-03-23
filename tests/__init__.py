@@ -325,6 +325,34 @@ class ValuesTestBase():
         self.assertFalse(not v)
 
 
+    def test_addition(self):
+
+        a = self.values()
+
+        self.assertEqual(a + a, a)
+        self.assertEqual(a + (), a)
+
+        b = self.values(1, 2)
+        c = self.values(3, 4)
+        d = self.values(1, 2, 3, 4)
+
+        self.assertEqual(a + b, b)
+        self.assertEqual(a + c, c)
+        self.assertEqual(b + c, d)
+        self.assertEqual(a + b + c, d)
+
+        e = self.values(foo=1, bar=2)
+        f = self.values(baz=3, qux=4)
+        g = self.values(foo=1, bar=2, baz=3, qux=4)
+
+        self.assertEqual(a + e, e)
+        self.assertEqual(f + a, f)
+        self.assertEqual(e + f, g)
+        self.assertEqual(a + e + f + a, g)
+        self.assertEqual(e + dict(baz=3, qux=4), g)
+        self.assertEqual(dict(foo=1, bar=2) + f, g)
+
+
     def test_hashing(self):
         """
         Test that the hashing works for values

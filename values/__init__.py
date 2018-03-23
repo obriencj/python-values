@@ -57,10 +57,13 @@ class pyvalues(object):
 
 
     def __eq__(self, other):
+
         if self is other:
             return True
 
-        elif isinstance(other, type(self)):
+        _values = type(self)
+
+        if isinstance(other, _values):
             return ((self.__args == other.__args) and
                     (self.__kwds == other.__kwds))
 
@@ -82,6 +85,36 @@ class pyvalues(object):
 
     def __bool__(self):
         return bool(self.__args or self.__kwds)
+
+
+    def __add__(self, other):
+        _values = type(self)
+
+        if isinstance(other, _values):
+            return self(_values, *other, **other)
+
+        elif isinstance(other, dict):
+            return self(_values, **other)
+
+        else:
+            return self(_values, *other)
+
+
+    def __radd__(self, left):
+        _values = type(self)
+
+        if isinstance(left, type(self)):
+            return left(_values, *self, **self)
+
+        elif isinstance(left, dict):
+            tmp = dict(left)
+            tmp.update(self.__kwds)
+            return _values(*self, **tmp)
+
+        else:
+            tmp = list(left)
+            tmp.extend(self.__args)
+            return _values(*tmp, **self)
 
 
     def __iter__(self):
