@@ -92,6 +92,9 @@ static PyObject *values_new(PyTypeObject *type,
 static void values_dealloc(PyObject *self) {
   PyValues *s = (PyValues *) self;
 
+  if (s->weakrefs != NULL)
+    PyObject_ClearWeakRefs(self);
+
   Py_XDECREF(s->args);
   Py_XDECREF(s->kwds);
 
@@ -178,7 +181,7 @@ static PyObject *values_call(PyObject *self,
 
   if (unlikely(! PyTuple_GET_SIZE(args))) {
     PyErr_SetString(PyExc_TypeError, "values objects must be called with at"
-		    "least one argument, the function to apply");
+		    " least one argument, the function to apply");
     return NULL;
   }
 
