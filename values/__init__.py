@@ -29,18 +29,20 @@ __ALL__ = ("values", )
 # we'll just use that instead.
 
 
-class pyvalues(object):
+class pyvalues(tuple):
 
-    def __init__(self, *args, **kwds):
-        self.__args = args
+    def __new__(cls, *args, **kwds):
+        self = tuple.__new__(cls, args)
+        # self.__args = args
         self.__kwds = kwds
         self.__hashed = None
+        return self
 
 
     def __repr__(self):
 
         members = []
-        members.extend(map(repr, self.__args))
+        members.extend(map(repr, self))
         members.extend(map("%s=%r".__mod__, self.__kwds.items()))
         members = ", ".join(members)
 
@@ -50,8 +52,9 @@ class pyvalues(object):
     def __hash__(self):
         result = self.__hashed
         if result is None:
-            result = (hash((self.__args, frozenset(self.__kwds.items())))
-                      if self.__kwds else hash(self.__args))
+            result = tuple.__hash__(self)
+            if self.__kwds:
+                result += hash(frozenset(self.__kwds.items()))
             self.__hashed = result
         return result
 
@@ -64,15 +67,15 @@ class pyvalues(object):
         _values = type(self)
 
         if isinstance(other, _values):
-            return ((self.__args == other.__args) and
+            return ((tuple(self) == tuple(other)) and
                     (self.__kwds == other.__kwds))
 
         elif isinstance(other, tuple):
             return ((not self.__kwds) and
-                    (self.__args == other))
+                    (tuple(self) == other))
 
         elif isinstance(other, dict):
-            return ((not self.__args) and
+            return ((not tuple(self)) and
                     (self.__kwds == other))
 
         else:
@@ -84,7 +87,7 @@ class pyvalues(object):
 
 
     def __bool__(self):
-        return bool(self.__args or self.__kwds)
+        return bool(len(self) or self.__kwds)
 
 
     def __add__(self, other):
@@ -113,17 +116,13 @@ class pyvalues(object):
 
         else:
             tmp = list(left)
-            tmp.extend(self.__args)
+            tmp.extend(self)
             return _values(*tmp, **self)
-
-
-    def __iter__(self):
-        return iter(self.__args)
 
 
     def __getitem__(self, key):
         if isinstance(key, (slice, int)):
-            return self.__args[key]
+            return tuple.__getitem__(self, key)
         else:
             return self.__kwds[key]
 
@@ -134,10 +133,10 @@ class pyvalues(object):
 
     def __call__(self, function, *args, **kwds):
         if args:
-            if self.__args:
-                args = self.__args + args
+            if len(self):
+                args = tuple(self) + args
         else:
-            args = self.__args
+            args = self
 
         if kwds:
             if self.__kwds:
